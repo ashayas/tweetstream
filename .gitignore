@@ -5,3 +5,6 @@ dist/
 .tokens.json
 *.log
 .DS_Store
+
+# Independently versioned marketing app
+/landing-page/

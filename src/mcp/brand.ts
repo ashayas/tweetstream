@@ -1,0 +1,6 @@
+/** Self-contained icon: works for local stdio clients without a hosted website. */
+export const MCP_ICON = {
+  src: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MCA4MCI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiByeD0iMjAiIGZpbGw9IiMxMDI5NDQiLz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg4IDgpIj48cGF0aCBmaWxsPSIjNDliYWZmIiBkPSJNOCAzOCAyIDI1bDIwIDVMMTMgOWwyNyAxN2M3LTEyIDE3LTkgMTgtMmw2IDMtNyA1Yy0yIDE1LTE1IDIzLTI5IDIwTDggNDlsMTItNnoiLz48cGF0aCBmaWxsPSIjMTAyOTQ0IiBkPSJtMjggMzQgMTUgMi05IDd6Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSIyNSIgcj0iMiIgZmlsbD0iIzEwMjk0NCIvPjwvZz48L3N2Zz4K",
+  mimeType: "image/svg+xml",
+  sizes: ["any"],
+};

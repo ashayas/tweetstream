@@ -4,12 +4,16 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { TOOLS, handleToolCall } from './tools.js';
+import { MCP_ICON } from './brand.js';
 
 export function createMcpServer(apiKeyOverride?: string): Server {
   const server = new Server(
     {
       name: 'tweet-stream',
       version: '0.1.0',
+      title: 'tweet.stream',
+      websiteUrl: 'https://tweet.stream',
+      icons: [MCP_ICON],
     },
     {
       capabilities: {

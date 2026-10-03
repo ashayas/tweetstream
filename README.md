@@ -177,3 +177,16 @@ curl http://localhost:3030/api/v1/me \
 ## 📄 License
 
 Apache-2.0 © [Vartabase AI](https://tweet.stream)
+
+## Website and repository layout
+
+The open-source API and MCP server live at [ashayas/tweetstream](https://github.com/ashayas/tweetstream); the local checkout is named `tweet_stream`.
+
+The marketing website is independently versioned in `landing-page/` and maintained in the private `ashayas/tweet-stream-landing-page` repository. It is excluded from this repository. Run `npm install && npm run dev` inside that separate checkout for the interactive local preview.
+
+- Privacy policy: https://tweet.stream/privacy
+- Terms of service: https://tweet.stream/tos
+- Brand artwork: `assets/brand/`
+- The MCP initialization metadata includes a self-contained bird icon so local clients do not need to fetch it from the website.
+
+Website production hosting is separate from the API. Serve the landing page at `/`, `/privacy`, `/tos`, and `/contact`, and route `/auth/*`, `/api/*`, `/mcp/*`, and `/health` to the core server. See the private landing repository's deployment example.
