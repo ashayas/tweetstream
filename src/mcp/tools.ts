@@ -116,29 +116,65 @@ export async function handleToolCall(
   apiKeyOverride?: string
 ): Promise<{ content: Array<{ type: 'text'; text: string }>; isError?: boolean }> {
   try {
+    // 1. Perform early argument validations
+    if (name === 'post_tweet') {
+      const text = String(args.text || '').trim();
+      if (!text) {
+        return {
+          content: [{ type: 'text', text: 'Error: Tweet text cannot be empty.' }],
+          isError: true,
+        };
+      }
+      if (text.length > 280) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error: Tweet text exceeds 280 characters (${text.length} characters). Please shorten it.`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    } else if (name === 'reply_to_tweet') {
+      const tweetId = String(args.tweet_id || '').trim();
+      const text = String(args.text || '').trim();
+      if (!tweetId) {
+        return {
+          content: [{ type: 'text', text: 'Error: tweet_id is required to reply.' }],
+          isError: true,
+        };
+      }
+      if (!text) {
+        return {
+          content: [{ type: 'text', text: 'Error: Reply text cannot be empty.' }],
+          isError: true,
+        };
+      }
+    } else if (name === 'get_tweet') {
+      const tweetId = String(args.tweet_id || '').trim();
+      if (!tweetId) {
+        return {
+          content: [{ type: 'text', text: 'Error: tweet_id is required.' }],
+          isError: true,
+        };
+      }
+    } else if (name === 'search_tweets') {
+      const query = String(args.query || '').trim();
+      if (!query) {
+        return {
+          content: [{ type: 'text', text: 'Error: Search query is required.' }],
+          isError: true,
+        };
+      }
+    }
+
+    // 2. Resolve authenticated Twitter client
     const { client, user, authType } = await getTwitterClient(apiKeyOverride);
 
     switch (name) {
       case 'post_tweet': {
         const text = String(args.text || '').trim();
-        if (!text) {
-          return {
-            content: [{ type: 'text', text: 'Error: Tweet text cannot be empty.' }],
-            isError: true,
-          };
-        }
-        if (text.length > 280) {
-          return {
-            content: [
-              {
-                type: 'text',
-                text: `Error: Tweet text exceeds 280 characters (${text.length} characters). Please shorten it.`,
-              },
-            ],
-            isError: true,
-          };
-        }
-
         const quoteTweetId = args.quote_tweet_id ? String(args.quote_tweet_id) : undefined;
         const result = await postTweet(client, { text, quoteTweetId });
 
@@ -155,20 +191,6 @@ export async function handleToolCall(
       case 'reply_to_tweet': {
         const tweetId = String(args.tweet_id || '').trim();
         const text = String(args.text || '').trim();
-
-        if (!tweetId) {
-          return {
-            content: [{ type: 'text', text: 'Error: tweet_id is required to reply.' }],
-            isError: true,
-          };
-        }
-        if (!text) {
-          return {
-            content: [{ type: 'text', text: 'Error: Reply text cannot be empty.' }],
-            isError: true,
-          };
-        }
-
         const result = await replyToTweet(client, tweetId, text);
         return {
           content: [

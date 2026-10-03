@@ -9,6 +9,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "test": "tsx --test tests/**/*.test.ts",
     "start": "tsx src/server/index.ts",
     "mcp": "tsx src/cli.ts",
     "dev:server": "tsx watch src/server/index.ts",
