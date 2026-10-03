@@ -1,0 +1,43 @@
+{
+  "name": "tweet-stream",
+  "version": "0.1.0",
+  "description": "Open Source X (Twitter) API & MCP Server by Vartabase AI",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "tweet-stream": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "tsx src/server/index.ts",
+    "mcp": "tsx src/cli.ts",
+    "dev:server": "tsx watch src/server/index.ts",
+    "dev:mcp": "tsx src/cli.ts"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "twitter",
+    "x",
+    "tweet-stream",
+    "vartabase"
+  ],
+  "author": "Vartabase AI (tweet.stream)",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.6.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "twitter-api-v2": "^1.19.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.9",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}
