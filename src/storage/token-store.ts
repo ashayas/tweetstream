@@ -51,6 +51,8 @@ export class TokenStore {
         obj[key] = session;
       }
       fs.writeFileSync(this.filePath, JSON.stringify(obj, null, 2), 'utf-8');
+      // This file contains bearer credentials. Restrict it to the service account on POSIX hosts.
+      if (process.platform !== 'win32') fs.chmodSync(this.filePath, 0o600);
     } catch (err) {
       console.error(`[TokenStore] Failed to save tokens to ${this.filePath}:`, (err as Error).message);
     }

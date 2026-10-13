@@ -9,7 +9,7 @@ import { TOOLS } from '../mcp/tools.js';
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '8mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Mount sub-routers
@@ -265,10 +265,11 @@ app.get('/', (req, res) => {
       <pre><code>{
   "mcpServers": {
     "tweet-stream": {
-      "command": "npx",
-      "args": ["-y", "tweet-stream"],
+      "command": "node",
+      "args": ["/absolute/path/to/tweetstream/dist/cli.js"],
       "env": {
-        "TWEET_STREAM_API_KEY": "YOUR_TWEET_STREAM_TOKEN_HERE"
+        "TWEET_STREAM_API_KEY": "YOUR_TWEET_STREAM_TOKEN_HERE",
+        "TOKEN_STORE_PATH": "/absolute/path/to/tweetstream/.tokens.json"
       }
     }
   }
@@ -278,7 +279,8 @@ app.get('/', (req, res) => {
       <pre><code>{
   "mcpServers": {
     "tweet-stream": {
-      "url": "${config.baseUrl}/mcp/sse?key=YOUR_TWEET_STREAM_TOKEN_HERE"
+      "url": "${config.baseUrl}/mcp/sse",
+      "headers": { "Authorization": "Bearer YOUR_TWEET_STREAM_TOKEN_HERE" }
     }
   }
 }</code></pre>

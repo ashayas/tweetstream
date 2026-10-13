@@ -21,7 +21,7 @@ export interface ToolDefinition {
 export const TOOLS: ToolDefinition[] = [
   {
     name: 'post_tweet',
-    description: 'Post a new tweet (status update) to X/Twitter from the authenticated account.',
+    description: 'Post a text or image update to X from the authenticated account. Image posts accept a base64 PNG, JPEG, or GIF up to 5 MiB.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -32,6 +32,15 @@ export const TOOLS: ToolDefinition[] = [
         quote_tweet_id: {
           type: 'string',
           description: 'Optional ID of an existing tweet to quote-tweet.',
+        },
+        image_base64: {
+          type: 'string',
+          description: 'Optional standard base64-encoded PNG, JPEG, or GIF image (up to 5 MiB decoded). Provide with image_mime_type.',
+        },
+        image_mime_type: {
+          type: 'string',
+          enum: ['image/png', 'image/jpeg', 'image/gif'],
+          description: 'MIME type of image_base64.',
         },
       },
       required: ['text'],
@@ -71,7 +80,7 @@ export const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'read_timeline',
-    description: 'Read recent active tweets from the authenticated user timeline. (Note: reading tweets requires X Basic tier or higher).',
+    description: 'Read recent posts from the authenticated user timeline. X API access and usage charges apply.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -84,7 +93,7 @@ export const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'search_tweets',
-    description: 'Search recent active tweets across X/Twitter matching a keyword query. (Requires X Basic tier or higher).',
+    description: 'Search recent posts across X matching a query. X API access and usage charges apply.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -176,7 +185,9 @@ export async function handleToolCall(
       case 'post_tweet': {
         const text = String(args.text || '').trim();
         const quoteTweetId = args.quote_tweet_id ? String(args.quote_tweet_id) : undefined;
-        const result = await postTweet(client, { text, quoteTweetId });
+        const imageBase64 = args.image_base64 ? String(args.image_base64) : undefined;
+        const imageMimeType = args.image_mime_type ? String(args.image_mime_type) : undefined;
+        const result = await postTweet(client, { text, quoteTweetId, imageBase64, imageMimeType });
 
         return {
           content: [

@@ -4,6 +4,30 @@ export interface PostTweetOptions {
   text: string;
   inReplyToTweetId?: string;
   quoteTweetId?: string;
+  imageBase64?: string;
+  imageMimeType?: string;
+}
+
+const IMAGE_MIME_TYPES = new Set(['image/png', 'image/jpeg', 'image/gif']);
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+export function decodeTweetImage(base64: string, mimeType: string): Buffer {
+  if (!IMAGE_MIME_TYPES.has(mimeType)) throw new Error('Image type must be PNG, JPEG, or GIF.');
+  if (!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(base64)) {
+    throw new Error('Image must be valid standard base64 data.');
+  }
+  const image = Buffer.from(base64, 'base64');
+  if (image.length === 0) throw new Error('Image cannot be empty.');
+  if (image.length > MAX_IMAGE_BYTES) throw new Error('Image must be 5 MiB or smaller.');
+  const signatures: Record<string, number[]> = {
+    'image/png': [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
+    'image/jpeg': [0xff, 0xd8, 0xff],
+    'image/gif': [0x47, 0x49, 0x46, 0x38],
+  };
+  if (!signatures[mimeType].every((byte, index) => image[index] === byte)) {
+    throw new Error('Image data does not match image_mime_type.');
+  }
+  return image;
 }
 
 export interface PostTweetResult {
@@ -35,6 +59,13 @@ export async function postTweet(
     const payload: Parameters<typeof client.v2.tweet>[0] = {
       text: options.text,
     };
+
+    if (options.imageBase64 || options.imageMimeType) {
+      if (!options.imageBase64 || !options.imageMimeType) throw new Error('image_base64 and image_mime_type must be provided together.');
+      const image = decodeTweetImage(options.imageBase64, options.imageMimeType);
+      const mediaId = await client.v2.uploadMedia(image, { media_type: options.imageMimeType as 'image/png' | 'image/jpeg' | 'image/gif', media_category: 'tweet_image' });
+      payload.media = { media_ids: [mediaId] };
+    }
 
     if (options.inReplyToTweetId) {
       payload.reply = {
@@ -226,7 +257,7 @@ function handleTwitterError(error: unknown, actionName: string): never {
     if (status === 403) {
       throw new Error(
         `X API Error (${status}) while ${actionName}: Access Forbidden.\n` +
-        `Note: Reading tweets / timeline requires an X Developer App with Basic Tier ($100/mo) or higher.\n` +
+        `Check that your X Developer App has the required endpoint access, permissions, scopes, and available usage credits.\n` +
         `X API response: ${details}`
       );
     }

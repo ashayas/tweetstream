@@ -9,7 +9,11 @@ const activeTransports = new Map<string, SSEServerTransport>();
 
 // 1. Establish SSE stream for MCP client
 mcpRouter.get('/sse', async (req: Request, res: Response) => {
-  const apiKey = (req.query.key as string) || (req.headers.authorization?.replace('Bearer ', '').trim());
+  const apiKey = req.headers.authorization?.match(/^Bearer\s+(.+)$/i)?.[1]?.trim();
+  if (!apiKey) {
+    res.status(401).send('Missing API key. Send Authorization: Bearer <ts_live_...>.');
+    return;
+  }
   
   // Create transport directing client messages to /mcp/messages
   const transport = new SSEServerTransport('/mcp/messages', res);

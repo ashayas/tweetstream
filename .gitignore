@@ -1,5 +1,9 @@
 node_modules/
 dist/
+.wrangler/
+worker-api/.wrangler/
+.dev.vars
+worker-api/.dev.vars
 .env
 .env.local
 .tokens.json
@@ -8,3 +12,6 @@ dist/
 
 # Independently versioned marketing app
 /landing-page/
+
+# Private deployment configuration
+worker-api/wrangler.toml

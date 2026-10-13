@@ -36,7 +36,7 @@ export function generateAuthLink(redirectUri?: string): { url: string; state: st
   const uri = redirectUri || config.xRedirectUri;
 
   const { url, codeVerifier, state } = client.generateOAuth2AuthLink(uri, {
-    scope: ['tweet.read', 'tweet.write', 'users.read', 'offline.access'],
+    scope: ['tweet.read', 'tweet.write', 'users.read', 'media.write', 'offline.access'],
   });
 
   stateStore.set(state, {

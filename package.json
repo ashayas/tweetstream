@@ -13,7 +13,11 @@
     "start": "tsx src/server/index.ts",
     "mcp": "tsx src/cli.ts",
     "dev:server": "tsx watch src/server/index.ts",
-    "dev:mcp": "tsx src/cli.ts"
+    "dev:mcp": "tsx src/cli.ts",
+    "worker:types": "npx wrangler types worker-api/worker-configuration.d.ts --config worker-api/wrangler.toml",
+    "worker:typecheck": "tsc -p worker-api/tsconfig.json",
+    "worker:dev": "npx wrangler dev --config worker-api/wrangler.toml",
+    "worker:migrate:local": "npx wrangler d1 migrations apply tweet-stream-production --local --config worker-api/wrangler.toml"
   },
   "keywords": [
     "mcp",
@@ -39,6 +43,7 @@
     "@types/node": "^22.13.9",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.3",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "wrangler": "^4.149.0"
   }
 }

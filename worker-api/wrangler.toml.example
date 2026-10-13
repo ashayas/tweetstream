@@ -1,0 +1,36 @@
+name = "tweet-stream-api"
+main = "src/index.ts"
+compatibility_date = "2026-10-11"
+workers_dev = true
+
+[vars]
+BASE_URL = "https://your-domain.com"
+
+[observability]
+enabled = true
+
+[observability.traces]
+enabled = true
+head_sampling_rate = 0.1
+
+[[routes]]
+pattern = "your-domain.com/auth/*"
+zone_name = "your-domain.com"
+
+[[routes]]
+pattern = "your-domain.com/api/*"
+zone_name = "your-domain.com"
+
+[[routes]]
+pattern = "your-domain.com/mcp*"
+zone_name = "your-domain.com"
+
+[[routes]]
+pattern = "your-domain.com/health"
+zone_name = "your-domain.com"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "tweet-stream-production"
+database_id = "your-d1-database-id-here"
+migrations_dir = "migrations"

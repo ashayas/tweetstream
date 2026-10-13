@@ -77,7 +77,12 @@ authRouter.get('/callback', async (req: Request, res: Response) => {
 
   try {
     const { session } = await handleOAuthCallback(code, state);
-    res.redirect(`/auth/success?key=${encodeURIComponent(session.apiKey)}&user=${encodeURIComponent(session.username)}&name=${encodeURIComponent(session.name)}`);
+    res.set({
+      'Cache-Control': 'no-store',
+      'Referrer-Policy': 'no-referrer',
+      'X-Content-Type-Options': 'nosniff',
+      'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'",
+    }).send(renderConnectedPage(session.apiKey, session.name, session.username));
   } catch (err) {
     res.status(500).send(`
       <!DOCTYPE html>
@@ -97,160 +102,45 @@ authRouter.get('/callback', async (req: Request, res: Response) => {
   }
 });
 
-// 3. Success page showing the user's generated API key
-authRouter.get('/success', (req: Request, res: Response) => {
-  const apiKey = req.query.key as string;
-  const user = req.query.user as string;
-  const name = req.query.name as string;
+// Never accept credentials in a URL: old success links may still exist in browser history.
+authRouter.get('/success', (_req: Request, res: Response) => {
+  res.set('Cache-Control', 'no-store').redirect('/');
+});
 
-  if (!apiKey) {
-    res.redirect('/');
-    return;
-  }
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  })[character] || character);
+}
 
-  res.send(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>Connected to tweet.stream!</title>
-      <style>
-        :root {
-          --bg: #0f1419;
-          --card: #192734;
-          --border: #38444d;
-          --text: #f7f9f9;
-          --text-muted: #8b98a5;
-          --primary: #1d9bf0;
-          --success: #00ba7c;
-        }
-        body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-          background: var(--bg);
-          color: var(--text);
-          margin: 0;
-          padding: 40px 20px;
-          display: flex;
-          justify-content: center;
-        }
-        .container {
-          max-width: 650px;
-          width: 100%;
-          background: var(--card);
-          border: 1px solid var(--border);
-          border-radius: 20px;
-          padding: 36px;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        .badge {
-          display: inline-block;
-          background: rgba(0, 186, 124, 0.15);
-          color: var(--success);
-          font-weight: 600;
-          padding: 6px 14px;
-          border-radius: 9999px;
-          font-size: 14px;
-          margin-bottom: 16px;
-        }
-        h1 { margin: 0 0 8px 0; font-size: 26px; }
-        p { color: var(--text-muted); line-height: 1.6; margin-top: 0; }
-        .key-box {
-          background: #000;
-          border: 1px solid #333;
-          border-radius: 12px;
-          padding: 16px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin: 24px 0;
-        }
-        .key-text {
-          font-family: monospace;
-          color: #79c0ff;
-          font-size: 15px;
-          word-break: break-all;
-        }
-        button.copy-btn {
-          background: var(--primary);
-          color: #fff;
-          border: none;
-          padding: 10px 18px;
-          border-radius: 8px;
-          font-weight: 600;
-          cursor: pointer;
-          margin-left: 12px;
-          white-space: nowrap;
-          transition: background 0.2s;
-        }
-        button.copy-btn:hover { background: #1a8cd8; }
-        pre {
-          background: #111;
-          padding: 16px;
-          border-radius: 10px;
-          overflow-x: auto;
-          font-size: 13px;
-          line-height: 1.5;
-          color: #e6edf3;
-        }
-        .footer {
-          margin-top: 30px;
-          border-top: 1px solid var(--border);
-          padding-top: 16px;
-          font-size: 13px;
-          color: var(--text-muted);
-          text-align: center;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="badge">✓ Successfully Connected</div>
-        <h1>Welcome, ${name} (@${user})!</h1>
-        <p>Your X account is linked to <strong>tweet.stream</strong>. Use your unique API Key below to let any MCP client or script tweet on your behalf.</p>
-
-        <label style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">Your tweet.stream API Key</label>
-        <div class="key-box">
-          <span class="key-text" id="api-key">${apiKey}</span>
-          <button class="copy-btn" onclick="copyKey()">Copy Key</button>
-        </div>
-
-        <h3 style="margin-top: 28px; margin-bottom: 12px;">Claude Desktop / Cursor Configuration</h3>
-        <p>Add this to your <code>claude_desktop_config.json</code>:</p>
-        <pre><code>{
+function renderConnectedPage(apiKey: string, name: string, username: string): string {
+  const safeKey = escapeHtml(apiKey);
+  const safeName = escapeHtml(name);
+  const safeUsername = escapeHtml(username);
+  const safeBaseUrl = escapeHtml(config.baseUrl);
+  return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer"><title>Connected to tweet.stream</title>
+<style>
+:root{color-scheme:dark;--bg:#0f1419;--card:#192734;--border:#38444d;--text:#f7f9f9;--muted:#8b98a5;--blue:#1d9bf0;--green:#00ba7c}
+*{box-sizing:border-box}body{font:16px/1.6 system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);margin:0;padding:40px 20px;display:grid;place-items:center;min-height:100vh}.card{max-width:720px;width:100%;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px;box-shadow:0 10px 30px #0008}.badge{color:var(--green);font-weight:700}h1{font-size:clamp(25px,5vw,36px);line-height:1.15}p{color:var(--muted)}code,pre,.key{font-family:ui-monospace,SFMono-Regular,monospace}.keybox{display:flex;gap:12px;align-items:flex-start;background:#090d11;border:1px solid var(--border);border-radius:12px;padding:16px}.key{color:#79c0ff;overflow-wrap:anywhere;flex:1}button{background:var(--blue);color:white;border:0;border-radius:8px;padding:10px 15px;font-weight:700;cursor:pointer}pre{white-space:pre;overflow:auto;background:#090d11;padding:16px;border-radius:12px;color:#e6edf3}a{color:#79c0ff}.note{border-left:3px solid var(--blue);padding-left:14px}.foot{margin-top:28px;border-top:1px solid var(--border);padding-top:16px}
+</style></head><body><main class="card"><div class="badge">✓ X account connected</div><h1>Welcome, ${safeName} (@${safeUsername})</h1>
+<p>This is a private API key for your self-hosted tweet.stream server. It is shown here once. Anyone who has it can act through this server as your X account.</p>
+<div class="keybox"><code class="key" id="api-key">${safeKey}</code><button id="copy-key" type="button">Copy key</button></div>
+<h2>Connect your MCP client</h2><p>Add this to the client’s MCP configuration. Replace the file paths with the absolute paths on this machine.</p>
+<pre><code>{
   "mcpServers": {
     "tweet-stream": {
-      "command": "npx",
-      "args": ["-y", "tweet-stream"],
-      "env": {
-        "TWEET_STREAM_API_KEY": "${apiKey}"
-      }
+      "url": "${safeBaseUrl}/mcp/sse",
+      "headers": { "Authorization": "Bearer ${safeKey}" }
     }
   }
 }</code></pre>
-
-        <h3 style="margin-top: 24px; margin-bottom: 12px;">Direct REST API Example</h3>
-        <pre><code>curl -X POST ${config.baseUrl}/api/v1/tweet \\
-  -H "Authorization: Bearer ${apiKey}" \\
-  -H "Content-Type: application/json" \\
-  -d '{"text": "Hello world from tweet.stream!"}'</code></pre>
-
-        <div class="footer">
-          Powered by <strong>Vartabase AI</strong> • Open Source on <a href="https://github.com" style="color: var(--primary);">GitHub</a>
-        </div>
-      </div>
-
-      <script>
-        function copyKey() {
-          const key = document.getElementById('api-key').innerText;
-          navigator.clipboard.writeText(key).then(() => {
-            const btn = document.querySelector('.copy-btn');
-            btn.innerText = 'Copied!';
-            setTimeout(() => { btn.innerText = 'Copy Key'; }, 2000);
-          });
-        }
-      </script>
-    </body>
-    </html>
-  `);
-});
+<p class="note">Tool calls can publish real posts. Start with <code>get_my_profile</code>; approve each write in your MCP client. X API usage is charged to the X Developer app configured on this server.</p>
+<p>If you lose this key, reconnect to generate a replacement. Keep <code>.tokens.json</code> private and never paste the key into a public issue.</p>
+<div class="foot">Apache-2.0 core · <a href="https://github.com/ashayas/tweetstream">View source</a></div></main>
+<script>
+history.replaceState(null,"", "/auth/success");
+document.getElementById("copy-key").addEventListener("click",async()=>{const button=document.getElementById("copy-key");try{await navigator.clipboard.writeText(document.getElementById("api-key").textContent);button.textContent="Copied";setTimeout(()=>button.textContent="Copy key",1800)}catch{button.textContent="Select and copy the key"}});
+</script></body></html>`;
+}

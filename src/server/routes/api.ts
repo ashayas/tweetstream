@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { getTwitterClient } from '../../twitter/client.js';
 import {
   postTweet,
+  decodeTweetImage,
   replyToTweet,
   getTweet,
   getTimeline,
@@ -29,7 +30,7 @@ apiRouter.post('/tweet', async (req: Request, res: Response) => {
   try {
     const apiKey = extractApiKey(req);
     const { client } = await getTwitterClient(apiKey);
-    const { text, quoteTweetId } = req.body;
+    const { text, quoteTweetId, imageBase64, imageMimeType } = req.body;
 
     if (!text || typeof text !== 'string') {
       res.status(400).json({ error: 'Field "text" is required.' });
@@ -41,9 +42,24 @@ apiRouter.post('/tweet', async (req: Request, res: Response) => {
       return;
     }
 
+    if (Boolean(imageBase64) !== Boolean(imageMimeType)) {
+      res.status(400).json({ error: 'Fields "imageBase64" and "imageMimeType" must be provided together.' });
+      return;
+    }
+    if (imageBase64 && imageMimeType) {
+      try {
+        decodeTweetImage(String(imageBase64), String(imageMimeType));
+      } catch (error) {
+        res.status(400).json({ error: (error as Error).message });
+        return;
+      }
+    }
+
     const result = await postTweet(client, {
       text,
       quoteTweetId: quoteTweetId ? String(quoteTweetId) : undefined,
+      imageBase64: imageBase64 ? String(imageBase64) : undefined,
+      imageMimeType: imageMimeType ? String(imageMimeType) : undefined,
     });
 
     res.json({ success: true, tweet: result });
